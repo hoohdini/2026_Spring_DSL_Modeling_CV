@@ -122,49 +122,43 @@ def run_all_tests():
     evaluator = HeadlessEvaluator()
     results = []
     
-    # Define test files
-    audio_test_files = [
-        "assets/reference_audio/obama1.wav",                  # baseline
-        "assets/reference_audio/obama1_test_fast.wav",        # test wpm
-        "assets/reference_audio/obama1_test_high_pitch.wav",  # test pitch
-        "assets/reference_audio/obama1_test_noisy.wav"        # test energy/noise
-    ]
+    audio_dir = REPO_ROOT / "assets" / "reference_audio"
+    video_dir = REPO_ROOT / "data"
     
-    print("--- Starting Headless Audio Evaluation ---")
-    for relative_path in audio_test_files:
-        p = REPO_ROOT / relative_path
-        if p.exists():
-            score, wpm, energy, pitch = evaluator.evaluate_audio(str(p))
-            results.append({
-                "type": "AUDIO",
-                "filename": p.name,
-                "overall_score": f"{score:.1f}",
-                "metric_1 (WPM/Pose)": f"{wpm:.1f}",
-                "metric_2 (Energy/Expr)": f"{energy:.4f}",
-                "metric_3 (Pitch)": f"{pitch:.1f}"
-            })
-            print(f"Evaluated {p.name}: Score={score:.1f} | WPM={wpm:.1f}")
-        else:
-            print(f"Missing: {p.name}")
+    # 1. Automatically find all test audio files
+    audio_test_files = sorted(list(audio_dir.glob("*_test_*.wav")))
+    # Add base files just for baseline comparison
+    base_audios = [f for f in audio_dir.glob("*.wav") if "_test_" not in f.name]
+    audio_test_files = base_audios + audio_test_files
+    
+    print(f"--- Starting Headless Audio Evaluation ({len(audio_test_files)} files) ---")
+    for p in audio_test_files:
+        score, wpm, energy, pitch = evaluator.evaluate_audio(str(p))
+        results.append({
+            "type": "AUDIO",
+            "filename": p.name,
+            "overall_score": f"{score:.1f}",
+            "metric_1 (WPM/Pose)": f"{wpm:.1f}",
+            "metric_2 (Energy/Expr)": f"{energy:.4f}",
+            "metric_3 (Pitch)": f"{pitch:.1f}"
+        })
+        print(f"Evaluated {p.name}: Score={score:.1f} | WPM={wpm:.1f}")
             
-    # Video testing placeholder (Add bad_pose.mp4 paths here once recorded)
-    video_test_files = [
-        "data/obama1.mp4" # baseline
-    ]
-    print("\n--- Starting Headless Video Evaluation ---")
-    for relative_path in video_test_files:
-        p = REPO_ROOT / relative_path
-        if p.exists():
-            s_pose, s_expr = evaluator.evaluate_video(str(p))
-            results.append({
-                "type": "VIDEO",
-                "filename": p.name,
-                "overall_score": "N/A",
-                "metric_1 (WPM/Pose)": f"{s_pose:.1f}",
-                "metric_2 (Energy/Expr)": f"{s_expr:.1f}",
-                "metric_3 (Pitch)": "N/A"
-            })
-            print(f"Evaluated {p.name}: Pose={s_pose:.1f} | Expr={s_expr:.1f}")
+    # 2. Automatically find all videos in data/
+    video_test_files = sorted(list(video_dir.glob("*.mp4")))
+    
+    print(f"\n--- Starting Headless Video Evaluation ({len(video_test_files)} files) ---")
+    for p in video_test_files:
+        s_pose, s_expr = evaluator.evaluate_video(str(p))
+        results.append({
+            "type": "VIDEO",
+            "filename": p.name,
+            "overall_score": "N/A",
+            "metric_1 (WPM/Pose)": f"{s_pose:.1f}",
+            "metric_2 (Energy/Expr)": f"{s_expr:.1f}",
+            "metric_3 (Pitch)": "N/A"
+        })
+        print(f"Evaluated {p.name}: Pose={s_pose:.1f} | Expr={s_expr:.1f}")
 
     # Output to CSV
     csv_path = REPO_ROOT / "scripts" / "eval" / "results.csv"
