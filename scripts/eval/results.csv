@@ -1,0 +1,6 @@
+type,filename,overall_score,metric_1 (WPM/Pose),metric_2 (Energy/Expr),metric_3 (Pitch)
+AUDIO,obama1.wav,66.7,64.2,0.0383,42.7
+AUDIO,obama1_test_fast.wav,66.7,6.1,0.0265,51.1
+AUDIO,obama1_test_high_pitch.wav,66.7,13.5,0.0258,51.6
+AUDIO,obama1_test_noisy.wav,66.7,6.8,0.0417,48.3
+VIDEO,obama1.mp4,N/A,73.8,60.7,N/A

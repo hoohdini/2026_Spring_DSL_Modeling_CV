@@ -114,8 +114,10 @@ class AudioAnalyzer:
         # 2. Pitch / Stress
         # Downsample for faster pitch tracking
         y_pitch = librosa.resample(y, orig_sr=self.sample_rate, target_sr=8000) if self.sample_rate > 8000 else y
-        f0, _, _ = librosa.pyin(y_pitch, fmin=70, fmax=400, sr=8000, hop_length=1024)
-        pitch_std = float(np.nanstd(f0)) if np.any(~np.isnan(f0)) else 0.0
+        f0 = librosa.yin(y_pitch, fmin=70, fmax=400, sr=8000, hop_length=1024)
+        rms_pitch = librosa.feature.rms(y=y_pitch, frame_length=2048, hop_length=1024)[0]
+        f0_voiced = f0[:len(rms_pitch)][rms_pitch > 0.01]
+        pitch_std = float(np.nanstd(f0_voiced)) if len(f0_voiced) > 0 else 0.0
         
         # 3. Whisper / Speed (WPM)
         wpm = 0.0
