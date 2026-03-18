@@ -5,7 +5,7 @@
 # Double-click this file in Finder (or run it from Terminal).
 #
 # Prerequisites (one-time):
-#   conda activate dslcv2
+#   python3 -m venv venv && source venv/bin/activate
 #   pip install -r requirements.txt
 #
 # macOS permissions required on first run:
@@ -16,16 +16,25 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR" || { echo "ERROR: cannot cd to $SCRIPT_DIR"; exit 1; }
 
-# ── Activate conda env ───────────────────────────────────────────────────────
-CONDA_BASE="$(conda info --base 2>/dev/null || echo /opt/anaconda3)"
-# shellcheck source=/dev/null
-source "$CONDA_BASE/etc/profile.d/conda.sh" 2>/dev/null || \
-  source "$CONDA_BASE/bin/activate" 2>/dev/null || true
+# ── Activate Environment (venv preferred over conda) ─────────────────────────
+if [ -d "$SCRIPT_DIR/venv" ] && [ -f "$SCRIPT_DIR/venv/bin/python" ]; then
+  # Use local venv if it exists
+  source "$SCRIPT_DIR/venv/bin/activate"
+  PYTHON="$SCRIPT_DIR/venv/bin/python"
+  echo "Using local venv environment..."
+else
+  # Fallback to Conda dslcv2 environment
+  CONDA_BASE="$(conda info --base 2>/dev/null || echo /opt/anaconda3)"
+  # shellcheck source=/dev/null
+  source "$CONDA_BASE/etc/profile.d/conda.sh" 2>/dev/null || \
+    source "$CONDA_BASE/bin/activate" 2>/dev/null || true
+  
+  conda activate dslcv2 2>/dev/null || true
+  PYTHON="$CONDA_BASE/envs/dslcv2/bin/python"
+  echo "Using conda dslcv2 environment..."
+fi
 
-conda activate dslcv2 2>/dev/null || true
-
-# ── Verify mediapipe solutions API is present ────────────────────────────────
-PYTHON="$CONDA_BASE/envs/dslcv2/bin/python"
+# Fallback to system python if still not found
 if [ ! -f "$PYTHON" ]; then
   PYTHON=python3
 fi
