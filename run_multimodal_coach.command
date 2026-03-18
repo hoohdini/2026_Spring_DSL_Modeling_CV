@@ -16,14 +16,22 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR" || { echo "ERROR: cannot cd to $SCRIPT_DIR"; exit 1; }
 
-# ── Activate Environment (venv preferred over conda) ─────────────────────────
-if [ -d "$SCRIPT_DIR/venv" ] && [ -f "$SCRIPT_DIR/venv/bin/python" ]; then
-  # Use local venv if it exists
+# ── Activate Environment (Active -> Local Venv -> Conda) ───────────────
+if [ -n "$VIRTUAL_ENV" ] && [ -f "$VIRTUAL_ENV/bin/python" ]; then
+  # 1. Use currently active standard venv
+  echo "Using active Virtual Environment: $VIRTUAL_ENV"
+  PYTHON="$VIRTUAL_ENV/bin/python"
+elif [ -n "$CONDA_PREFIX" ] && [ -f "$CONDA_PREFIX/bin/python" ]; then
+  # 2. Use currently active Conda environment
+  echo "Using active Conda Environment: $CONDA_PREFIX"
+  PYTHON="$CONDA_PREFIX/bin/python"
+elif [ -d "$SCRIPT_DIR/venv" ] && [ -f "$SCRIPT_DIR/venv/bin/python" ]; then
+  # 3. Use local venv if it exists in the project folder
   source "$SCRIPT_DIR/venv/bin/activate"
   PYTHON="$SCRIPT_DIR/venv/bin/python"
   echo "Using local venv environment..."
 else
-  # Fallback to Conda dslcv2 environment
+  # 4. Fallback to Conda 'dslcv2' environment (create if necessary)
   CONDA_BASE="$(conda info --base 2>/dev/null || echo /opt/anaconda3)"
   # shellcheck source=/dev/null
   source "$CONDA_BASE/etc/profile.d/conda.sh" 2>/dev/null || \
@@ -34,8 +42,9 @@ else
   echo "Using conda dslcv2 environment..."
 fi
 
-# Fallback to system python if still not found
+# 5. Final Fallback to system python if still not found
 if [ ! -f "$PYTHON" ]; then
+  echo "Warning: Python not found in specific environments, falling back to system python3"
   PYTHON=python3
 fi
 
