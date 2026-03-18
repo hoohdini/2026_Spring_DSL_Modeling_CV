@@ -243,7 +243,6 @@ class Test4App:
                 json.dump(mock_data, f)
         
         # Audio Extraction
-        audio_path = REFERENCE_AUDIO_PATH
         if not audio_path.exists():
             print("Extracting audio from video...")
             os.system(f"ffmpeg -i \"{ref_video_path}\" -q:a 0 -map a \"{audio_path}\" -y")
