@@ -35,38 +35,53 @@ def change_speed(y, speed_factor=1.5):
 
 def generate_augmented_audio():
     root = get_project_root()
-    ref_audio_dir = root / "assets" / "reference_audio"
+    data_dir = root / "data"
+    test_data_dir = data_dir / "test_data"
     
-    # Process all base audio files (ignoring ones we already augmented)
-    base_audios = [f for f in ref_audio_dir.glob("*.wav") if "_test_" not in f.name]
+    test_data_dir.mkdir(parents=True, exist_ok=True)
     
-    if not base_audios:
-         print(f"No base audio files found in {ref_audio_dir}")
+    # Process all base mp4 files
+    mp4_files = list(data_dir.glob("*.mp4"))
+    
+    if not mp4_files:
+         print(f"No .mp4 files found in {data_dir}")
          return
 
-    for target_audio in base_audios:
-        print(f"\n--- Processing {target_audio.name} ---")
-        y, sr = librosa.load(target_audio, sr=None)
+    for mp4_file in mp4_files:
+        vid_name = mp4_file.stem
+        print(f"\n--- Processing {vid_name} ---")
+        
+        # 0. Extract base audio if needed
+        base_wav = test_data_dir / f"{vid_name}_base.wav"
+        if not base_wav.exists():
+            import subprocess
+            print(f" Extracting base audio via ffmpeg...")
+            subprocess.run([
+                "ffmpeg", "-i", str(mp4_file), 
+                "-q:a", "0", "-map", "a", str(base_wav), "-y"
+            ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            
+        y, sr = librosa.load(base_wav, sr=None)
         
         # 1. High Pitch
-        out_pitch = ref_audio_dir / f"{target_audio.stem}_test_high_pitch.wav"
+        out_pitch = test_data_dir / f"{vid_name}_test_high_pitch.wav"
         if not out_pitch.exists():
             print(" Generating high pitch version...")
             sf.write(out_pitch, shift_pitch(y, sr, n_steps=6), sr)
         
         # 2. Fast Speed
-        out_speed = ref_audio_dir / f"{target_audio.stem}_test_fast.wav"
+        out_speed = test_data_dir / f"{vid_name}_test_fast.wav"
         if not out_speed.exists():
             print(" Generating fast speed version...")
             sf.write(out_speed, change_speed(y, speed_factor=1.8), sr)
 
         # 3. Noisy
-        out_noise = ref_audio_dir / f"{target_audio.stem}_test_noisy.wav"
+        out_noise = test_data_dir / f"{vid_name}_test_noisy.wav"
         if not out_noise.exists():
             print(" Generating noisy version...")
             sf.write(out_noise, add_noise(y, noise_level=0.02), sr)
 
-    print("\nDone! All test audio files created successfully in assets/reference_audio/")
+    print(f"\nDone! All test audio files created successfully in {test_data_dir.relative_to(root)}/")
 
 if __name__ == "__main__":
     generate_augmented_audio()

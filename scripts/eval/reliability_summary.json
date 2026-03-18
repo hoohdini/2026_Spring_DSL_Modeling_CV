@@ -1,0 +1,8 @@
+{
+  "audio_reliability_mean": 89.48,
+  "video_stability_score": 86.11,
+  "num_audio_files_evaluated": 40,
+  "num_video_files_evaluated": 10,
+  "num_audio_clips_grouped": 10,
+  "notes": "Audio reliability is computed from base-vs-augmented robustness and score stability; video score reports per-file composite and global dispersion-based stability."
+}
